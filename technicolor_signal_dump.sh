@@ -54,8 +54,8 @@ mqtt_pub_exe="echo mosquitto_pub"
 # Test if we have a working mosquitto_pub
 if ! command -v ${mqtt_pub_exe} &> /dev/null
 then
-    echoerr "Mosquitto MQTT client '$mqtt_pub_exe' not found"
-    exit 10
+	echoerr "Mosquitto MQTT client '$mqtt_pub_exe' not found"
+	exit 10
 fi
 
 #####################################
@@ -111,9 +111,9 @@ getSWInfo;
 # See if we were successful
 # Yes, it really says "Getway" in the title
 if [ "$(echo "$result" | grep -c '<title>Residential Getway Configuration: Status - Software</title>')" == "0" ]; then
-    echoerr "Got bad response retrieving software information page from modem. Retrying"
-    echoerr "Result string: \n${result}"
-    loginStatus "failed_retrying"
+	echoerr "Got bad response retrieving software information page from modem. Retrying"
+	echoerr "Result string: \n${result}"
+	loginStatus "failed_retrying"
 
 #	# If we failed (got a login prompt) try once more for new token
 #	eraseToken;
@@ -124,8 +124,8 @@ fi
 # See if we were successful
 if [ "$(echo "$result" | grep -c '<title>Residential Getway Configuration: Status - Software</title>')" == "0" ]; then
 	# At this point, if we weren't successful, we give up
-    echoerr "Got bad response retrieving software information page modem on the second attempt. Exiting"
-    echoerr "Result string: \n${result}"
+	echoerr "Got bad response retrieving software information page modem on the second attempt. Exiting"
+	echoerr "Result string: \n${result}"
 	loginStatus "failed"
 	exit 21
 else
@@ -181,8 +181,8 @@ getConnStatus;
 # See if we were successful
 # Yes, it really says "Getway" in the title
 if [ "$(echo "$result" | grep -c '<title>Residential Getway Configuration: Status - Connection</title>')" == "0" ]; then
-    echoerr "Got bad response retrieving connection status from modem. Retrying"
-    echoerr "Result string: \n${result}"
+	echoerr "Got bad response retrieving connection status from modem. Retrying"
+	echoerr "Result string: \n${result}"
 	loginStatus "failed_retrying"
 
 #	# If we failed (got a login prompt) try once more for new token
@@ -194,8 +194,8 @@ fi
 # See if we were successful
 if [ "$(echo "$result" | grep -c '<title>Residential Getway Configuration: Status - Connection</title>')" == "0" ]; then
 	# At this point, if we weren't successful, we give up
-    echoerr "Got bad response retrieving connection status from modem on the second attempt. Exiting"
-    echoerr "Result string: \n${result}"
+	echoerr "Got bad response retrieving connection status from modem on the second attempt. Exiting"
+	echoerr "Result string: \n${result}"
 	loginStatus "failed"
 	exit 21
 else
@@ -206,24 +206,26 @@ fi
 function pubConfigMessage () {
 
 	# Sample config message
-	 # config_message="{\"name\": \"Channel ${index} Frequency\", \"device_class\": \"frequency\", \"state_topic\": \"${state_topic}\", \"unit_of_measurement\": \"Hz\", \"value_template\": \"{{ value_json.frequency}}\",\"unique_id\": \"${modem_id}_d${index}_frequency\", \"device\": {\"identifiers\": [\"${serial_number}\",\"${modem_id}\"], \"name\": \"Cable modem TC4400\" }}"
+	# config_message="{\"name\": \"Channel ${index} Frequency\", \"device_class\": \"frequency\", \"state_topic\": \"${state_topic}\", \"unit_of_measurement\": \"Hz\", \"value_template\": \"{{ value_json.frequency}}\",\"unique_id\": \"${modem_id}_d${index}_frequency\", \"device\": {\"identifiers\": [\"${serial_number}\",\"${modem_id}\"], \"name\": \"Cable modem TC4400\" }}"
 
-    # Break out field information from the command line
-    #config_index="$1"
-    # Descriptive name for the whole sensor (e.g. "Channel 22")
-    config_name="$1"
-    # MQTT topic where the sensor data will be published
-    config_state_topic="$2"
-    # Infix for the unique ID of the sub-sensors (e.g. "channel22")
-    config_infix="$3"
-    # Suffix for identifying each sub-sensor in MQTT topics (e.g. "freq")
+	# Break out field information from the command line
+	#config_index="$1"
+	# Descriptive name for the whole sensor (e.g. "Channel 22")
+	config_name="$1"
+	# MQTT topic where the sensor data will be published
+	config_state_topic="$2"
+	# Infix for the unique ID of the sub-sensors (e.g. "channel22")
+	config_infix="$3"
+	# Suffix for identifying each sub-sensor in MQTT topics (e.g. "freq")
 	config_suffix="$4"
-    # Suffix for identifying each sub-sensor descriptively (optional) (e.g. "Frequency")
+	# Suffix for identifying each sub-sensor descriptively (optional) (e.g. "Frequency")
 	config_suffix_descriptive="$5"
+	# State class and Last Reset, to generate proper statistics ("measurement", "total", "total_increasing")
+	config_state_class="$6"
 	# Unit of measurement (optional) (e.g. "Hz")
-	config_unit="$6"
+	config_unit="$7"
 	# Device class for the sensor (optional) (e.g. "frequency")
-	config_device_class="$7"
+	config_device_class="$8"
 	
 	# Derive config topic from state topic
 	config_topic="${config_state_topic}_${config_suffix}/config"
@@ -247,11 +249,16 @@ function pubConfigMessage () {
 		config_message="${config_message} \"device_class\": \"${config_device_class}\", "	   
 	fi
 
+	# Add state class if we have one
+	if [ "${config_state_class}" != "" ]; then
+		config_message="${config_message} \"state_class\": \"${config_state_class}\", "	   
+	fi
+
 	# Add unit of measurement if we have one
 	if [ "${config_unit}" != "" ]; then
 		config_message="${config_message} \"unit_of_measurement\": \"${config_unit}\", "	   
 	fi
-		
+
 	# Add reference to our device
 	config_message="${config_message} \"device\": "
 	config_message="${config_message} {"
@@ -264,7 +271,7 @@ function pubConfigMessage () {
 	config_message="${config_message} \"sw_version\": \"${sw_version}\", "
 	config_message="${config_message} \"connections\": [[\"mac\", \"${mac_address}\"]]"
 	config_message="${config_message} }"
-	
+
 	config_message="{ ${config_message} }"
 	# Publish (persistent with -r, so that the device doesn't disappear)
 	$mqtt_pub_exe -r -h "$mqtt_broker" -u "$mqtt_username" -P "$mqtt_password" -t "${config_topic}" -m "${config_message}" || { echoerr "MQTT error posting config message ${config_message} to topic ${config_topic}" ; exit 20 ; } 
@@ -297,7 +304,7 @@ to_parse=$(echo "$startup_rows" | sed 's/<th[^>]*>[^<]*<\/th>//g;s/^<td[^>]*>//g
 
 state_topic="${mqtt_topic}_status"
 pubConfigMessage "Modem" ${state_topic} "status" "channel" "Channel State"
-pubConfigMessage "Modem" ${state_topic} "status" "frequency" "Downstream Channel" "Hz" "frequency"
+pubConfigMessage "Modem" ${state_topic} "status" "frequency" "Downstream Channel" "measurement" "Hz" "frequency"
 pubConfigMessage "Modem" ${state_topic} "status" "connectivity" "Connectivity State"
 pubConfigMessage "Modem" ${state_topic} "status" "boot" "Boot State"
 pubConfigMessage "Modem" ${state_topic} "status" "security" "Security State"
@@ -339,24 +346,24 @@ echo "$downstream_rows" | tail -n +3 | while read -r line; do
 	# 		print "\"Corrected\": "$12","
 	# 		print "\"Uncorrectable\": "$13}'
 
-    # We want our channel sensor IDs to be independent of the arbitrary ordering on the status page
+	# We want our channel sensor IDs to be independent of the arbitrary ordering on the status page
 	# index=$counter
 	index=$(echo $to_parse | awk '{print $2}')
-    state_topic="${mqtt_topic}_downstream${index}"
+	state_topic="${mqtt_topic}_downstream${index}"
 
-	echo "Publishing channel ${index}↓"
-	pubConfigMessage "Channel ${index}↓" ${state_topic} "downstream${index}" "id" "ID"
-	pubConfigMessage "Channel ${index}↓" ${state_topic} "downstream${index}" "type" "Type"
-	pubConfigMessage "Channel ${index}↓" ${state_topic} "downstream${index}" "frequency" "Frequency" "Hz" "frequency"  
-	pubConfigMessage "Channel ${index}↓" ${state_topic} "downstream${index}" "width" "Width" "Hz" "frequency"
-	pubConfigMessage "Channel ${index}↓" ${state_topic} "downstream${index}" "power" "Power" "dBmV"  
-	pubConfigMessage "Channel ${index}↓" ${state_topic} "downstream${index}" "profile" "Modulation Profile"
-	pubConfigMessage "Channel ${index}↓" ${state_topic} "downstream${index}" "lockstatus" "Lock Status"
-	pubConfigMessage "Channel ${index}↓" ${state_topic} "downstream${index}" "bondingstatus" "Bonding Status"
-	pubConfigMessage "Channel ${index}↓" ${state_topic} "downstream${index}" "snr" "SNR" "dB" "signal_strength"  
-	pubConfigMessage "Channel ${index}↓" ${state_topic} "downstream${index}" "noerr" "Error-free" "B" "data_size"  
-	pubConfigMessage "Channel ${index}↓" ${state_topic} "downstream${index}" "corr" "Corrected" "B" "data_size"  
-	pubConfigMessage "Channel ${index}↓" ${state_topic} "downstream${index}" "uncorr" "Uncorrectable" "B" "data_size"  
+	echo "Publishing downstream channel ${index}"
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "id" "ID"
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "type" "Type"
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "frequency" "Frequency" "measurement" "Hz" "frequency"  
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "width" "Width" "measurement" "Hz" "frequency"
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "power" "Power" "measurement" "dBmV"  
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "profile" "Modulation Profile"
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "lockstatus" "Lock Status"
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "bondingstatus" "Bonding Status"
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "snr" "SNR" "measurement" "dB" "signal_strength"  
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "noerr" "Error-free" "total_increasing" "B" "data_size"  
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "corr" "Corrected" "B" "total_increasing" "data_size"  
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "uncorr" "Uncorrectable" "total_increasing" "B" "data_size"  
     
 	state_message=""
 	state_message="${state_message}$(echo "$to_parse" | awk '{ print "\"id\": "$2", " }')"
@@ -393,19 +400,19 @@ echo "$upstream_rows" | tail -n +3 | while read -r line; do
 	# 		print "\"ChannelWidth\": "$7","
 	# 		print "\"TransmitLevel\": "$8","
 	# 		print "\"ModulationProfileID\": \""$9"\""}'
-	
-	index=${counter}
-    state_topic="${mqtt_topic}_upstream${index}"
 
-	echo "Publishing channel ${index}↑"
-	pubConfigMessage "Channel ${index}↑" ${state_topic} "upstream${index}" "id" "ID"
-	pubConfigMessage "Channel ${index}↑" ${state_topic} "upstream${index}" "type" "Type"
-	pubConfigMessage "Channel ${index}↑" ${state_topic} "upstream${index}" "frequency" "Frequency" "Hz" "frequency"  
-	pubConfigMessage "Channel ${index}↑" ${state_topic} "upstream${index}" "width" "Width" "Hz" "frequency"
-	pubConfigMessage "Channel ${index}↑" ${state_topic} "upstream${index}" "power" "Power" "dBmV"  
-	pubConfigMessage "Channel ${index}↑" ${state_topic} "upstream${index}" "profile" "Modulation Profile"
-	pubConfigMessage "Channel ${index}↑" ${state_topic} "upstream${index}" "lockstatus" "Lock Status"
-	pubConfigMessage "Channel ${index}↑" ${state_topic} "upstream${index}" "bondingstatus" "Bonding Status"
+	index=${counter}
+	state_topic="${mqtt_topic}_upstream${index}"
+
+	echo "Publishing upstream channel ${index}"
+	pubConfigMessage "Up ${index}" ${state_topic} "upstream${index}" "id" "ID"
+	pubConfigMessage "Up ${index}" ${state_topic} "upstream${index}" "type" "Type"
+	pubConfigMessage "Up ${index}" ${state_topic} "upstream${index}" "frequency" "Frequency" "measurement" "Hz" "frequency"  
+	pubConfigMessage "Up ${index}" ${state_topic} "upstream${index}" "width" "Width" "measurement" "Hz" "frequency"
+	pubConfigMessage "Up ${index}" ${state_topic} "upstream${index}" "power" "Power" "measurement" "dBmV"  
+	pubConfigMessage "Up ${index}" ${state_topic} "upstream${index}" "profile" "Modulation Profile"
+	pubConfigMessage "Up ${index}" ${state_topic} "upstream${index}" "lockstatus" "Lock Status"
+	pubConfigMessage "Up ${index}" ${state_topic} "upstream${index}" "bondingstatus" "Bonding Status"
     
 	state_message=""
 	state_message="${state_message}$(echo "$to_parse" | awk '{ print "\"id\": "$2", " }')"
