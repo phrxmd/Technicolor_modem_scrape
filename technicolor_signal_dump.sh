@@ -162,11 +162,19 @@ serial_number=$(echo $cm_info | awk '{print $10}')
 hw_version=$(echo $cm_info | awk '{print $4}')
 sw_version=$(echo $cm_info | awk '{print $6}')
 mac_address=$(echo $cm_info | awk '{print $8}')
+# Generate updime in seconds - I'm sure there is a better way
+uptime=$(echo $cm_info | awk '{print $14}' | sed 's/days/d /;s/:/ /g;s/ 0/ /g;')
+addr_ipv4=$(echo $cm_info | awk '{print $18}' | sed 's/IPv4=//;')
+addr_ipv6=$(echo $cm_info | awk '{print $20}' | sed 's/IPv6=//;')
 
 echo "Serial number: $serial_number"
 echo "Hardware version: $hw_version"
 echo "Software version: $sw_version"
 echo "Modem MAC Address: $mac_address"
+echo "Modem IPv4 Address: $addr_ipv4"
+echo "Modem IPv6 Address: $addr_ipv6"
+echo "Uptime: $uptime"
+
 
 modem_id="$mqtt_uid_prefix$serial_number"
 mqtt_topic="$mqtt_topic_prefix/$modem_id"
@@ -209,22 +217,21 @@ function pubConfigMessage () {
 	# config_message="{\"name\": \"Channel ${index} Frequency\", \"device_class\": \"frequency\", \"state_topic\": \"${state_topic}\", \"unit_of_measurement\": \"Hz\", \"value_template\": \"{{ value_json.frequency}}\",\"unique_id\": \"${modem_id}_d${index}_frequency\", \"device\": {\"identifiers\": [\"${serial_number}\",\"${modem_id}\"], \"name\": \"Cable modem TC4400\" }}"
 
 	# Break out field information from the command line
-	#config_index="$1"
-	# Descriptive name for the whole sensor (e.g. "Channel 22")
+	# Descriptive name for the whole sensor (e.g. "Down 22")
 	config_name="$1"
 	# MQTT topic where the sensor data will be published
 	config_state_topic="$2"
-	# Infix for the unique ID of the sub-sensors (e.g. "channel22")
+	# Infix for the unique ID of the sub-sensors (e.g. "down22")
 	config_infix="$3"
 	# Suffix for identifying each sub-sensor in MQTT topics (e.g. "freq")
 	config_suffix="$4"
-	# Suffix for identifying each sub-sensor descriptively (optional) (e.g. "Frequency")
+	# Suffix for identifying each sub-sensor descriptively (optional, e.g. "Frequency")
 	config_suffix_descriptive="$5"
-	# State class and Last Reset, to generate proper statistics ("measurement", "total", "total_increasing")
+	# State class, so that Home Assistant can generate proper statistics (optional: one of "measurement", "total", "total_increasing")
 	config_state_class="$6"
-	# Unit of measurement (optional) (e.g. "Hz")
+	# Unit of measurement (optional, e.g. "Hz")
 	config_unit="$7"
-	# Device class for the sensor (optional) (e.g. "frequency")
+	# Device class for the sensor (optional, e.g. "frequency")
 	config_device_class="$8"
 	
 	# Derive config topic from state topic
@@ -301,6 +308,8 @@ to_parse=$(echo "$startup_rows" | sed 's/<th[^>]*>[^<]*<\/th>//g;s/^<td[^>]*>//g
 # BootState       OK ($11)     Operational ($12)
 # ConfigurationFile       OK ($14)      bac10402000300018c6a8d0c8d48 ($15)
 # Security   Enabled  ($17) BPI+ ($18)
+#
+# In addition, we can use some of our earlier variables, e.g. $uptime, $addr_ipv4, $addr_ipv6.
 
 state_topic="${mqtt_topic}_status"
 pubConfigMessage "Modem" ${state_topic} "status" "channel" "Channel State"
@@ -310,6 +319,9 @@ pubConfigMessage "Modem" ${state_topic} "status" "boot" "Boot State"
 pubConfigMessage "Modem" ${state_topic} "status" "security" "Security State"
 pubConfigMessage "Modem" ${state_topic} "status" "secservice" "Security Service"
 pubConfigMessage "Modem" ${state_topic} "status" "configfile" "Configuration File Hash"
+pubConfigMessage "Modem" ${state_topic} "status" "uptime" "Uptime" 
+pubConfigMessage "Modem" ${state_topic} "status" "addr_ipv4" "IPv4 Address"
+pubConfigMessage "Modem" ${state_topic} "status" "addr_ipv6" "IPv6 Address"
 
 state_message=""
 state_message="${state_message}$(echo "$to_parse" | awk '{ print "\"channel\": \""$6"\", " }')"
@@ -318,7 +330,10 @@ state_message="${state_message}$(echo "$to_parse" | awk '{ print "\"connectivity
 state_message="${state_message}$(echo "$to_parse" | awk '{ print "\"boot\": \""$12"\", " }')"
 state_message="${state_message}$(echo "$to_parse" | awk '{ print "\"security\": \""$17"\", " }')"
 state_message="${state_message}$(echo "$to_parse" | awk '{ print "\"secservice\": \""$18"\", " }')"
-state_message="${state_message}$(echo "$to_parse" | awk '{ print "\"configfile\": \""$15"\"" }')"
+state_message="${state_message}$(echo "$to_parse" | awk '{ print "\"configfile\": \""$15"\", " }')"
+state_message="${state_message}\"uptime\": \"${uptime}\", "
+state_message="${state_message}\"addr_ipv4\": \"${addr_ipv4}\", "
+state_message="${state_message}\"addr_ipv6\": \"${addr_ipv6}\""
 state_message="{ ${state_message} }" 
 $mqtt_pub_exe -h "$mqtt_broker" -u "$mqtt_username" -P "$mqtt_password" -t "${state_topic}" -m "${state_message}" || { echoerr "MQTT error posting modem status ${state_message} to topic ${state_topic}" ; exit 20 ; }
 
@@ -362,7 +377,7 @@ echo "$downstream_rows" | tail -n +3 | while read -r line; do
 	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "bondingstatus" "Bonding Status"
 	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "snr" "SNR" "measurement" "dB" "signal_strength"  
 	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "noerr" "Error-free" "total_increasing" "B" "data_size"  
-	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "corr" "Corrected" "B" "total_increasing" "data_size"  
+	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "corr" "Corrected" "total_increasing" "B" "data_size"  
 	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "uncorr" "Uncorrectable" "total_increasing" "B" "data_size"  
     
 	state_message=""
