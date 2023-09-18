@@ -10,7 +10,7 @@ This is a modification of [mmiller7](https://github.com/mmiller7/)'s scrapers fo
 
 - `technicolor_signal_dump.sh` - the script which logs into the modem and scrapes/parses the data publishing JSON to MQTT 
 
-## Install Process
+## Install Process in Home Assistant
 
 Prerequisite: [MQTT configured and working on Home Assistant](https://www.home-assistant.io/integrations/mqtt/). I have tested this only with Home Assistant's own Mosquitto add-on.
 
