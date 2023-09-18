@@ -18,7 +18,7 @@ Prerequisite: [MQTT configured and working on Home Assistant](https://www.home-a
 
 2. If you want to run this from within Home Assistant, you need to set up the Mosquitto binary for posting MQTT data. Unfortunately the Home Assistant container seems not to give access to binaries in `/usr/bin`. So we have to set up a copy under `/config` where our script can see it. This is a bit of a hack, the easiest way to do this is through the SSH terminal:
 ```
-> mkdir /config/bin /config/bin/mosquitto_deps /config/bin/mosquitto_deps/libcares
+> mkdir /config/bin /config/bin/mosquitto_deps /config/bin/mosquitto_deps/lib
 > cp /usr/bin/mosquitto_pub /config/bin/mosquitto_deps
 > cp /usr/lib/libcares.so.2 /usr/lib/libmosquitto.so.1 /config/bin/mosquitto_deps/lib
 ```
