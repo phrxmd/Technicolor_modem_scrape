@@ -2,6 +2,8 @@
 
 This script is for monitoring signal quality on a Technicolor cable modem through MQTT. This script should allow you to scrape the modem status data and write it out to a MQTT broker. You can then use something like Home Assistant to take actions based on the data (graph it, issue automations to cycle a smartplug, etc).
 
+You can run the script on any Unix/Linux computer that can see both the modem and the MQTT broker and has a working `mosquitto_pub`, or you can run it on the Home Assistant instance itself.
+
 This is a modification of [mmiller7](https://github.com/mmiller7/)'s scrapers for [Arris](https://github.com/mmiller7/Arris_modem_scrape) and [Netgear](https://github.com/mmiller7/Netgear_modem_scrape) cable modems. The login process has been simplified because the Technicolor modem does not require a login token, but uses HTTP and basic authentification only. In addition, the script is somewhat easier to install because it uses MQTT Discovery for telling Home Assistant about all the data sources, so Home Assistant picks them up automatically and assigns them to a cable modem device. You don't need a separate YAML file where they are all defined manually and which you need to edit manually for the number of channels provided by your ISP. 
 
 ## Files 
