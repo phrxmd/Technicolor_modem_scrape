@@ -1,19 +1,19 @@
 # Technicolor Modem MQTT Scraper
 
-This script is for monitoring signal quality on a Technicolor cable modem through MQTT. It allow you to scrape the modem status data and write it out to a MQTT broker. You can then use something like Home Assistant to take actions based on the data (graph it, issue automations to cycle a smartplug, etc).
+This script is for monitoring signal quality on a Technicolor cable modem through MQTT. It allow you to scrape the modem status data and write it out to a MQTT broker. You can then use something like Home Assistant to take actions based on the data: graph it, issue automations to cycle a smartplug, etc.
 
-You can run the script on any Unix/Linux computer that can see both the modem and the MQTT broker and has a working `mosquitto_pub`, or you can run it on the Home Assistant instance itself.
-
-This is a modification of [mmiller7](https://github.com/mmiller7/)'s scrapers for [Arris](https://github.com/mmiller7/Arris_modem_scrape) and [Netgear](https://github.com/mmiller7/Netgear_modem_scrape) cable modems. The login process has been simplified because the Technicolor modem does not require a login token, but uses HTTP and basic authentification only. In addition, the script is somewhat easier to install because it uses MQTT Discovery for telling Home Assistant about all the data sources, so Home Assistant picks them up automatically and assigns them to a cable modem device. You don't need a separate YAML file where they are all defined manually and which you need to edit manually for the number of channels provided by your ISP. 
+You can run the script on any Unix/Linux computer that (a) can see both the modem and the MQTT broker and (b) has a working `mosquitto_pub`, or you can run it on a Home Assistant instance itself.
 
 ## Files 
 
 - `technicolor_signal_dump.sh` - the script which logs into the modem and scrapes/parses the data publishing JSON to MQTT 
+- `technicolor_modem_scrape.yaml` - YAML configuration examples for Home Assistant
 
-## What the Script Does
+## What the script does
 
 The script does the following:
 
+- Log into the modem's status pages using a username/password combination specified by the user
 - Scrape the modem's status pages for connection information
 - Publish the modem as a device, with manufacturer, hardware and software versions, serial number
 - Publish the modem state as a sensor ("Modem"), with channel and connectivity state, connected frequency, IPv4 and IPv6 addresses and modem uptime
@@ -39,9 +39,11 @@ If you are not running Home Assistant, the prefixes `homeassistant/sensor` and `
 
 If you have multiple Technicolor modems, the script should support scraping and publishing multiple modems separately. You need to set up a separate copy of the script for each modem. If you want to keep track of login attempts on each modem separately, you can set `mqtt_logging_topic` separately for each modem. This is untested.
 
-## Install Process for Home Assistant
+## Installation process for Home Assistant
 
-Prerequisite: [MQTT configured and working on Home Assistant](https://www.home-assistant.io/integrations/mqtt/). I have tested this only with Home Assistant's own Mosquitto add-on.
+Here's how to get the script working in Home Assistant. If you're using something else than Home Assistant, you need to figure out how to get it working yourself (install the file, make sure it can use Mosquitto to publish things to MQTT, and set it up to run at regular intervals).
+
+The prerequisite on Home Assistant is to have [MQTT configured and working](https://www.home-assistant.io/integrations/mqtt/). I have tested this only with Home Assistant's own Mosquitto add-on.
 
 1. Download the script off GitHub and place it in `/config`, e.g. as `/config/technicolor_signal_dump.sh` or in a subfolder as you see fit.
 
