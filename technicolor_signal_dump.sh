@@ -175,7 +175,6 @@ echo "Modem IPv4 Address: $addr_ipv4"
 echo "Modem IPv6 Address: $addr_ipv6"
 echo "Uptime: $uptime"
 
-
 modem_id="$mqtt_uid_prefix$serial_number"
 mqtt_topic="$mqtt_topic_prefix/$modem_id"
 
