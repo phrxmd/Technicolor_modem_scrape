@@ -74,22 +74,14 @@ mqtt_password="your_mqtt_password_here"
 Optional:
 At this point, if you wish, it should be possible to do an initial test. By opening a MQTT Explorer/Browser, and then going to the SSH addon in Home Assistant and running `/config/technicolor_signal_dump.sh`, it should scrape the modem and publish new topics.  You can see the command line output. In addition, one of the published topics should be `homeassistant/sensor/technicolor_scraper/login` which will provide information about problems or success of the modem login process while scraping the data.
 
-<<<<<<< HEAD
-5. Now, you will need to configure Home Assistant to connect to the sensors. For this, edit `configuration.yaml` and add a shell command that points to wherever under `/config` you saved the script. If the script is directly under `/config`, it could look like this:
-=======
 5. Now, you will need to configure Home Assistant to connect to the sensors. For this, edit `configuration.yaml` and add a shell command that points to wherever under `/config` you saved the script. Take a look at `technicolor_modem_signal.yaml` for an example of what it could look like. If you installed the script is directly under `/config`, the minimally required entry in `configuration.yaml` would look like this:
->>>>>>> c495321 (More details in README.md)
 ```
 # Technicolor TC4400 cable modem scraper script
 shell_command:
   technicolor_signal_dump: '/config/technicolor_signal_dump.sh'
 ```
 
-<<<<<<< HEAD
-7. Set up an automation to adjust when the signal-scrape is triggered. I prefer to do this not in a separate YAML file, but in the Automation set-up in Home Assistant; that way I have all automations in one place. Here is a very verbose automation that shows you all the things you could do:
-=======
 7. Set up an automation to adjust when the signal-scrape is triggered. I prefer to do this not in YAML, but in the Automation set-up in Home Assistant; that way I have all automations in one place. If you prefer to do this in YAML, take a look at `technicolor_modem_signal.yaml` for an example of what it could look like. Here is a very verbose automation example that shows you all the things you could do:
->>>>>>> c495321 (More details in README.md)
 ```
 alias: Technicolor Cable Modem Signals
 description: Scrape the web interface of the TC4400 cable modem
