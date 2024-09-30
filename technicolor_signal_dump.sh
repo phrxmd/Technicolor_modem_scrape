@@ -311,7 +311,7 @@ to_parse=$(echo "$startup_rows" | sed 's/<th[^>]*>[^<]*<\/th>//g;s/^<td[^>]*>//g
 #
 # In addition, we can use some of our earlier variables, e.g. $uptime, $addr_ipv4, $addr_ipv6.
 
-state_topic="${mqtt_topic}_status"
+state_topic="${mqtt_topic}/status"
 pubConfigMessage "Modem" ${state_topic} "status" "channel" "Channel State"
 pubConfigMessage "Modem" ${state_topic} "status" "frequency" "Downstream Channel" "measurement" "Hz" "frequency"
 pubConfigMessage "Modem" ${state_topic} "status" "connectivity" "Connectivity State"
@@ -364,7 +364,7 @@ echo "$downstream_rows" | tail -n +3 | while read -r line; do
 	# We want our channel sensor IDs to be independent of the arbitrary ordering on the status page
 	# index=$counter
 	index=$(echo $to_parse | awk '{print $2}')
-	state_topic="${mqtt_topic}_downstream${index}"
+	state_topic="${mqtt_topic}/downstream${index}"
 
 	echo "Publishing downstream channel ${index}"
 	pubConfigMessage "Down ${index}" ${state_topic} "downstream${index}" "id" "ID"
@@ -417,7 +417,7 @@ echo "$upstream_rows" | tail -n +3 | while read -r line; do
 	# 		print "\"ModulationProfileID\": \""$9"\""}'
 
 	index=${counter}
-	state_topic="${mqtt_topic}_upstream${index}"
+	state_topic="${mqtt_topic}/upstream${index}"
 
 	echo "Publishing upstream channel ${index}"
 	pubConfigMessage "Up ${index}" ${state_topic} "upstream${index}" "id" "ID"
